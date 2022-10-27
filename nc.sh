@@ -5,9 +5,6 @@
 ###############################################################
 
 caddy=caddy-forwardproxy-naive
-if [[ -f /usr/sbin/iptables ]]; then
-    /usr/sbin/iptables -P INPUT ACCEPT
-fi
 echo2(){
     if [ "$2" = "G" ]; then
         color="38;5;71" 
@@ -60,6 +57,10 @@ wget -N $(curl -s https://api.github.com/repos/klzgrad/forwardproxy/releases/lat
 tar -xvJf $caddy.tar.xz && mv $caddy/caddy /usr/bin/
 rm -rf $caddy.tar.xz $caddy
 port=$(echo $RANDOM)
+if [[ -f /usr/sbin/iptables ]]; then
+    # /usr/sbin/iptables -P INPUT ACCEPT
+    /usr/sbin/iptables -I INPUT -p tcp --dport $port -j ACCEPT
+fi
 cat > /etc/Caddyfile <<CONFIG
 :$port, $domain:$port
 tls admin@$domain
