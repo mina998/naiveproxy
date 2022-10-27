@@ -63,7 +63,7 @@ if [[ -f /usr/sbin/iptables ]]; then
     iptables -P FORWARD ACCEPT
     iptables -P OUTPUT ACCEPT
     iptables -F
-    apt-get purge netfilter-persistent
+    apt-get purge netfilter-persistent -y
 fi
 cat > /etc/Caddyfile <<CONFIG
 :$port, $domain:$port
