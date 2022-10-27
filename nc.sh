@@ -58,8 +58,12 @@ tar -xvJf $caddy.tar.xz && mv $caddy/caddy /usr/bin/
 rm -rf $caddy.tar.xz $caddy
 port=$(echo $RANDOM)
 if [[ -f /usr/sbin/iptables ]]; then
-    # /usr/sbin/iptables -P INPUT ACCEPT
-    /usr/sbin/iptables -I INPUT -p tcp --dport $port -j ACCEPT
+    # /usr/sbin/iptables -I INPUT -p tcp --dport $port -j ACCEPT
+    iptables -P INPUT ACCEPT
+    iptables -P FORWARD ACCEPT
+    iptables -P OUTPUT ACCEPT
+    iptables -F
+    apt-get purge netfilter-persistent
 fi
 cat > /etc/Caddyfile <<CONFIG
 :$port, $domain:$port
