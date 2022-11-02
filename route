@@ -1,0 +1,12 @@
+
+:$port, $domain:$port
+tls admin@$domain
+route {
+    forward_proxy {
+        basic_auth $username $password
+        hide_ip
+        hide_via
+        probe_resistance
+    }
+    respond "caddy web server test."
+}
