@@ -16,14 +16,6 @@ echo2(){
     fi
     echo -e "\033[${color}m${1}\033[39m"
 }
-# 创建随机字符 最长32位
-random_str(){
-    if [ -z "$1" ]; then
-        echo $RANDOM |md5sum |cut -c 1-6
-    else 
-        echo $RANDOM |md5sum |cut -c 1-$1
-    fi
-}
 domain_dns_test(){
     dns_error=0
     local local_ip=$(wget -U Mozilla -qO - http://ip.42.pl/raw)
@@ -41,9 +33,9 @@ input_get(){
     while true
     do
         echo2 "^+C 取消操作" Y
-        port=$(echo $[$RANDOM%60000+1000])
-        user="u`random_str`"
-        pass="p`random_str`"
+        port=":$(echo $[$RANDOM%60000+1000])"
+        user="u`echo $RANDOM |md5sum |cut -c 1-5`"
+        pass="p`echo $RANDOM |md5sum |cut -c 1-5`"
         read -p "请输入域名: " domain
         if [ -n "$domain" ]; then
             echo2 "开始检测域名解析结果...." G
@@ -56,18 +48,13 @@ input_get(){
             echo2 "域名不能为空."
             continue
         fi
-        read -p "请输入端口(默认:$port): " port2
-        if [ -n "$port2" ]; then
-            port=$port2
-        fi
-        read -p "请输入账号(默认:$user): " username
-        if [ -n "$username" ]; then
-            user=$username
-        fi
-        read -p "请输入密码(默认:$pass): " password
-        if [ -n "$password" ]; then
-            pass=$password
-        fi
+        read -p "请输入端口(随机:$port): " port2
+        [ -n "$port2" ] && port=":$port2"
+        [ "$port2" = "443" ] && port=""
+        read -p "请输入账号(随机:$user): " username
+        [ -n "$username" ] && user=$username
+        read -p "请输入密码(随机:$pass): " password
+        [ -n "$password" ] && pass=$password
         break
     done
 }
@@ -84,7 +71,7 @@ install_naive_proxy(){
         iptables -F
         apt-get purge netfilter-persistent -y
     fi
-    wget -qO - $base_url/route | sed "{s/\$username/$user/;s/\$password/$pass/;s/\$domain/$domain/g;s/\$port/$port/g}" > $caddy_path/Caddyfile
+    wget -qO - $base_url/route | sed "{s/\$username/$user/;s/\$password/$pass/;s/\$domain/$domain/g;s/:\$port/$port/g}" > $caddy_path/Caddyfile
 }
 caddy_start(){
     input_get
@@ -97,11 +84,11 @@ caddy_start(){
     sleep 5
     echo2 "客户端配置QUIC:" G
     echo -e "\033[32m"
-    wget -qO - $base_url/client | sed "{s/\$username/$user/;s/\$password/$pass/;s/\$domain/$domain/g;s/\$port/$port/g}"
+    wget -qO - $base_url/client | sed "{s/\$username/$user/;s/\$password/$pass/;s/\$domain/$domain/g;s/:\$port/$port/g}"
     echo -e "\033[0m"
     echo2 "客户端配置HTTPS:" G
     echo -e "\033[32m"
-    wget -qO - $base_url/client | sed "{s/\$username/$user/;s/\$password/$pass/;s/\$domain/$domain/g;s/\$port/$port/g}" | sed 's/quic:/https:/'
+    wget -qO - $base_url/client | sed "{s/\$username/$user/;s/\$password/$pass/;s/\$domain/$domain/g;s/:\$port/$port/g}" | sed 's/quic:/https:/'
     echo -e "\033[0m"
 }
 caddy_start
